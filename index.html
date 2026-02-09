@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITパスポート 練習アプリ（一覧・ジャンプ付）</title>
+    <title>ITパスポート 練習アプリ（詳細一覧付）</title>
     <script src="question.js"></script>
     <style>
         :root {
@@ -14,35 +14,38 @@
             --bg: #1a1a1a; --card: #2d2d2d; --text: #e0e0e0; --border: #444; --selected: #1e3a5f;
         }
         body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; transition: 0.3s; margin: 0; }
-        .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); position: relative; }
+        .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .header { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 5px; flex-wrap: wrap; }
         .btn-sm { font-size: 0.75em; padding: 5px 10px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 5px; }
         
-        /* 問題一覧モーダル */
+        /* 詳細リスト形式のモーダル */
         #list-modal { 
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 20px; box-sizing: border-box;
+            background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 15px; box-sizing: border-box;
         }
         .modal-content { 
-            background: var(--card); margin: 0 auto; max-width: 500px; padding: 20px; border-radius: 15px; 
+            background: var(--card); margin: 0 auto; max-width: 550px; padding: 20px; border-radius: 15px; 
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
-        .q-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 15px; }
-        .grid-btn { padding: 10px 0; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 5px; cursor: pointer; font-size: 0.9em; text-align: center; }
-        .grid-btn:hover { background: var(--primary); color: white; }
+        .q-list { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
+        .list-btn { 
+            display: flex; align-items: center; padding: 12px; border: 1px solid var(--border); 
+            background: var(--card); color: var(--text); border-radius: 8px; cursor: pointer; text-align: left; 
+            gap: 10px; transition: 0.2s;
+        }
+        .list-btn:hover { background: var(--primary); color: white !important; }
+        .list-num { font-weight: bold; width: 45px; flex-shrink: 0; }
+        .list-cat { font-size: 0.75em; width: 85px; flex-shrink: 0; padding: 2px 5px; background: #eef; border-radius: 4px; color: #555; text-align: center; }
+        .list-btn:hover .list-cat { background: rgba(255,255,255,0.2); color: white; }
+        .list-snippet { font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; opacity: 0.8; }
 
         .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 15px; overflow: hidden; }
         #fill { height: 100%; background: var(--primary); width: 0%; transition: 0.4s; }
         .q-text { font-size: 1.1em; font-weight: bold; margin-bottom: 20px; line-height: 1.5; }
-        
-        .choice { 
-            display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border);
-            border-radius: 10px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; font-size: 1em;
-        }
+        .choice { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; }
         .selected-choice { border-color: var(--primary); background: var(--selected); }
-        .correct { border-color: var(--success) !important; background: rgba(40,167,69,0.1) !important; font-weight: bold; }
+        .correct { border-color: var(--success) !important; background: rgba(40,167,69,0.1) !important; }
         .wrong { border-color: var(--danger) !important; background: rgba(220,53,69,0.1) !important; }
-
         #action-area { margin-top: 20px; text-align: center; }
         .btn-action { width: 100%; padding: 15px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: bold; font-size: 1.1em; cursor: pointer; }
         #result-label { font-weight: bold; margin-bottom: 10px; height: 1.5em; }
@@ -52,11 +55,11 @@
 
 <div id="list-modal">
     <div class="modal-content">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin:0;">問題一覧</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+            <h3 style="margin:0;">問題を選択してジャンプ</h3>
             <button class="btn-sm" onclick="toggleModal()">✕ 閉じる</button>
         </div>
-        <div id="q-grid" class="q-grid"></div>
+        <div id="q-list" class="q-list"></div>
     </div>
 </div>
 
@@ -64,7 +67,7 @@
     <div class="header">
         <div>
             <button class="btn-sm" onclick="prevQ()">◀ 前へ</button>
-            <button class="btn-sm" onclick="toggleModal()">📋 一覧</button>
+            <button class="btn-sm" onclick="toggleModal()">📋 問題一覧</button>
             <button class="btn-sm" onclick="toggleDark()">🌙 モード</button>
         </div>
         <div>
@@ -97,28 +100,33 @@
         localStorage.setItem('ip_dark', isDark);
     }
 
-    // 一覧モーダルの開閉
+    // 詳細一覧の表示切り替え
     function toggleModal() {
         const modal = document.getElementById('list-modal');
-        const grid = document.getElementById('q-grid');
+        const list = document.getElementById('q-list');
         
         if (modal.style.display === 'block') {
             modal.style.display = 'none';
         } else {
-            // グリッド作成（100問分）
-            grid.innerHTML = '';
+            list.innerHTML = '';
             quizData.forEach((q, i) => {
                 const btn = document.createElement('button');
-                btn.className = 'grid-btn';
-                btn.innerText = q.問番号;
+                btn.className = 'list-btn';
+                // 問題文からタグを除去し冒頭25文字を抽出
+                const preview = q.問題文.replace(/<br>/g, ' ').substring(0, 25) + '...';
+                
+                btn.innerHTML = `
+                    <div class="list-num">問${q.問番号}</div>
+                    <div class="list-cat">${q.カテゴリ}</div>
+                    <div class="list-snippet">${preview}</div>
+                `;
                 btn.onclick = () => jumpTo(i);
-                grid.appendChild(btn);
+                list.appendChild(btn);
             });
             modal.style.display = 'block';
         }
     }
 
-    // 指定した問題へジャンプ
     function jumpTo(targetIdx) {
         idx = targetIdx;
         localStorage.setItem('ip_idx', idx);
@@ -133,22 +141,18 @@
             return;
         }
         if (idx >= quizData.length) {
-            document.querySelector('.container').innerHTML = `<h2>学習完了！</h2><button class="btn-action" onclick="reset()">最初から解く</button>`;
+            document.querySelector('.container').innerHTML = `<h2>完了！</h2><button class="btn-action" onclick="reset()">最初から解く</button>`;
             return;
         }
-
         isAnswerShown = false;
         currentSelection = null;
         const q = quizData[idx];
-        
         document.getElementById('info').innerText = `問 ${q.問番号} / ${quizData.length} [${q.カテゴリ}]`;
         document.getElementById('question').innerHTML = q.問題文;
         document.getElementById('fill').style.width = `${(idx / quizData.length) * 100}%`;
         document.getElementById('result-label').innerText = "";
-        
-        const mainBtn = document.getElementById('main-btn');
-        mainBtn.innerText = "回答を判定する";
-        mainBtn.disabled = true;
+        document.getElementById('main-btn').innerText = "回答を判定する";
+        document.getElementById('main-btn').disabled = true;
 
         const area = document.getElementById('choices');
         area.innerHTML = '';
@@ -157,66 +161,46 @@
                 const b = document.createElement('button');
                 b.className = 'choice'; b.id = 'b'+k;
                 b.innerHTML = `<strong>${k}</strong>: ${q.選択肢[k]}`;
-                b.onclick = () => selectChoice(k);
+                b.onclick = () => {
+                    if (isAnswerShown) return;
+                    currentSelection = k;
+                    ['ア','イ','ウ','エ'].forEach(key => document.getElementById('b'+key)?.classList.remove('selected-choice'));
+                    b.classList.add('selected-choice');
+                    document.getElementById('main-btn').disabled = false;
+                };
                 area.appendChild(b);
             }
         });
     }
 
-    function selectChoice(k) {
-        if (isAnswerShown) return;
-        currentSelection = k;
-        ['ア','イ','ウ','エ'].forEach(key => {
-            const b = document.getElementById('b'+key);
-            if(b) b.classList.remove('selected-choice');
-        });
-        document.getElementById('b'+k).classList.add('selected-choice');
-        const mainBtn = document.getElementById('main-btn');
-        mainBtn.disabled = false;
-    }
-
     function handleButtonClick() {
-        if (!isAnswerShown) revealAnswer();
-        else nextQ();
+        if (!isAnswerShown) {
+            const q = quizData[idx];
+            const isCorrect = (currentSelection === q.正解);
+            isAnswerShown = true;
+            totals++; if (isCorrect) corrects++;
+            localStorage.setItem('ip_cor', corrects); localStorage.setItem('ip_tot', totals);
+
+            ['ア','イ','ウ','エ'].forEach(k => {
+                const b = document.getElementById('b'+k);
+                if(b) {
+                    b.disabled = true;
+                    if(k === q.正解) b.classList.add('correct');
+                    else if(k === currentSelection) b.classList.add('wrong');
+                }
+            });
+            const label = document.getElementById('result-label');
+            label.innerText = isCorrect ? "○ 正解！" : `× 不正解（正解：${q.正解}）`;
+            label.style.color = isCorrect ? "var(--success)" : "var(--danger)";
+            document.getElementById('main-btn').innerText = "次へ進む";
+        } else {
+            idx++; localStorage.setItem('ip_idx', idx); init(); window.scrollTo(0,0);
+        }
     }
 
-    function revealAnswer() {
-        const q = quizData[idx];
-        const isCorrect = (currentSelection === q.正解);
-        isAnswerShown = true;
-        
-        totals++;
-        if (isCorrect) corrects++;
-        localStorage.setItem('ip_cor', corrects);
-        localStorage.setItem('ip_tot', totals);
-
-        ['ア','イ','ウ','エ'].forEach(k => {
-            const b = document.getElementById('b'+k);
-            if(b) {
-                b.disabled = true;
-                if(k === q.正解) b.classList.add('correct');
-                else if(k === currentSelection) b.classList.add('wrong');
-            }
-        });
-
-        const label = document.getElementById('result-label');
-        label.innerText = isCorrect ? "○ 正解です！" : `× 不正解（正解：${q.正解}）`;
-        label.style.color = isCorrect ? "var(--success)" : "var(--danger)";
-        document.getElementById('main-btn').innerText = "次へ進む";
-    }
-
-    function nextQ() { idx++; localStorage.setItem('ip_idx', idx); init(); window.scrollTo(0,0); }
     function prevQ() { if (idx > 0) { idx--; localStorage.setItem('ip_idx', idx); init(); window.scrollTo(0,0); } }
-
-    function showStats() {
-        if(totals === 0) alert("データがありません。");
-        else alert(`正答率: ${((corrects/totals)*100).toFixed(1)}% (${totals}問中${corrects}正解)`);
-    }
-
-    function reset() {
-        if(confirm("進行度をリセットしますか？")) { localStorage.clear(); location.reload(); }
-    }
-
+    function showStats() { alert(`正答率: ${totals === 0 ? 0 : ((corrects/totals)*100).toFixed(1)}% (${totals}問中${corrects}正解)`); }
+    function reset() { if(confirm("リセットしますか？")) { localStorage.clear(); location.reload(); } }
     window.onload = init;
 </script>
 </body>
