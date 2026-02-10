@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITパスポート 公開問題演習（自動集計版）</title>
+    <title>ITパスポート試験 公開問題演習</title>
     <script src="question.js"></script>
     <style>
         :root {
@@ -137,25 +137,25 @@
     function updateStatsModal() {
         const body = document.getElementById('stats-body');
         const categories = [
-            { id: 'strat', name: "ストラテジ系", range:, max: 35, color: "var(--strat-txt)" },
-            { id: 'mgmt', name: "マネジメント系", range:, max: 20, color: "var(--mgmt-txt)" },
-            { id: 'tech', name: "テクノロジ系", range:, max: 45, color: "var(--tech-txt)" }
+            { id: 'strat', name: "ストラテジ系", start: 1, end: 35, max: 35, color: "var(--strat-txt)" },
+            { id: 'mgmt', name: "マネジメント系", start: 36, end: 55, max: 20, color: "var(--mgmt-txt)" },
+            { id: 'tech', name: "テクノロジ系", start: 56, end: 100, max: 45, color: "var(--tech-txt)" }
         ];
         body.innerHTML = '';
         categories.forEach(c => {
-            let catCorrect = correctList.filter(n => n >= c.range && n <= c.range).length;
+            // カテゴリ範囲内の正解数を正しくフィルタリング
+            let catCorrect = correctList.filter(n => n >= c.start && n <= c.end).length;
             let rate = ((catCorrect / c.max) * 100).toFixed(1);
             body.innerHTML += `<div class="stat-item"><div class="stat-label"><span>${c.name}</span><span>${catCorrect}/${c.max}点</span></div><div class="stat-bar-container"><div class="target-line" style="left:30%"></div><div class="stat-bar-fill" style="width:${rate}%; background:${c.color}"></div></div></div>`;
         });
         const total = correctList.length;
         body.innerHTML += `<div style="margin-top:20px; padding:15px; background:rgba(0,123,255,0.1); border-radius:10px; text-align:center;"><div style="font-weight:bold;">総合得点 (100点満点)</div><div style="font-size:2.5em; font-weight:bold; color:var(--primary);">${total}点</div></div>`;
         
-        // モーダルを表示（既に開いている場合は何もしない）
         document.getElementById('stats-modal').style.display = 'block';
     }
 
     function init() {
-        if (typeof quizData === 'undefined') return;
+        if (typeof quizData === 'undefined' || quizData.length === 0) return;
         
         const mainBtn = document.getElementById('main-btn');
         const info = document.getElementById('info');
@@ -169,17 +169,14 @@
         currentSelection = null;
         prevBtn.disabled = (idx === 0);
 
-        // 全問終了時の自動処理
         if (idx >= quizData.length) {
             info.innerText = "演習 修了";
             document.getElementById('fill').style.width = "100%";
-            question.innerHTML = "<h2>全ての回答が終了しました</h2><p>分析結果を自動で表示しています。未到達の分野がないか確認しましょう。</p><p>「前へ」ボタンや「一覧」から復習も可能です。</p>";
+            question.innerHTML = "<h2>全ての回答が終了しました</h2><p>分析結果を自動で表示しています。</p><p>「前へ」ボタンや「一覧」から復習も可能です。</p>";
             choices.innerHTML = "";
             mainBtn.innerText = "分析結果を再表示";
             mainBtn.disabled = false;
             mainBtn.onclick = updateStatsModal;
-            
-            // 【重要】修了時に自動で統計を表示
             updateStatsModal();
             return;
         }
