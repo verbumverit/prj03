@@ -3,20 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITパスポート試験 公開問題演習</title>
+    <title>ITパスポート試験 公開問題演習（グラフ対応版）</title>
     <script src="question.js"></script>
     <style>
         :root {
             --bg: #f0f2f5; --card: #ffffff; --text: #333; --border: #e0e0e0;
             --primary: #007bff; --success: #28a745; --danger: #dc3545; --selected: #e7f3ff;
-            /* カテゴリ別カラー（ライト） */
             --strat-bg: #e1f5fe; --strat-txt: #01579b;
             --mgmt-bg: #e8f5e9; --mgmt-txt: #1b5e20;
             --tech-bg: #fff3e0; --tech-txt: #e65100;
         }
         body.dark-mode {
             --bg: #1a1a1a; --card: #2d2d2d; --text: #e0e0e0; --border: #444; --selected: #1e3a5f;
-            /* カテゴリ別カラー（ダーク） */
             --strat-bg: #01579b; --strat-txt: #e1f5fe;
             --mgmt-bg: #1b5e20; --mgmt-txt: #e8f5e9;
             --tech-bg: #bf360c; --tech-txt: #ffe0b2;
@@ -25,20 +23,23 @@
         .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         .header { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 5px; flex-wrap: wrap; }
         .btn-sm { font-size: 0.75em; padding: 6px 12px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 5px; }
-        .btn-sm:disabled { opacity: 0.3; }
 
-        /* モーダル */
-        #list-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 15px; box-sizing: border-box; }
+        /* モーダル共通 */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 15px; box-sizing: border-box; }
         .modal-content { background: var(--card); margin: 0 auto; max-width: 550px; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.4); }
-        .q-list { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-        .list-btn { display: flex; align-items: center; padding: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 8px; cursor: pointer; text-align: left; gap: 10px; }
-        .list-btn:hover { background: var(--selected); }
-        .list-num { font-weight: bold; width: 40px; flex-shrink: 0; }
+
+        /* カテゴリ別カラーラベル */
         .list-cat { font-size: 0.7em; width: 80px; flex-shrink: 0; padding: 3px 0; border-radius: 4px; text-align: center; font-weight: bold; }
         .cat-strat { background: var(--strat-bg); color: var(--strat-txt); }
         .cat-mgmt { background: var(--mgmt-bg); color: var(--mgmt-txt); }
         .cat-tech { background: var(--tech-bg); color: var(--tech-txt); }
-        .list-snippet { font-size: 0.85em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; opacity: 0.8; }
+
+        /* グラフィカル統計用 */
+        .stat-item { margin-bottom: 20px; }
+        .stat-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
+        .stat-bar-container { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; position: relative; }
+        .stat-bar-fill { height: 100%; transition: width 0.8s ease-out; }
+        .target-line { position: absolute; top: 0; height: 100%; width: 2px; background: red; opacity: 0.5; }
 
         /* メインUI */
         .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 15px; overflow: hidden; }
@@ -50,19 +51,33 @@
         .wrong { border-color: var(--danger) !important; background: rgba(220,53,69,0.1) !important; }
         #action-area { margin-top: 20px; text-align: center; border-top: 1px solid var(--border); padding-top: 15px; }
         .btn-action { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; }
-        .btn-action:disabled { background: #ccc; cursor: not-allowed; }
         #result-label { font-weight: bold; margin-bottom: 10px; height: 1.5em; font-size: 1.2em; }
     </style>
 </head>
 <body>
 
-<div id="list-modal" onclick="if(event.target === this) toggleModal()">
+<!-- 問題一覧モーダル -->
+<div id="list-modal" class="modal" onclick="if(event.target === this) toggleModal('list-modal')">
     <div class="modal-content">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
             <h3 style="margin:0;">問題一覧</h3>
-            <button class="btn-sm" onclick="toggleModal()">✕ 閉じる</button>
+            <button class="btn-sm" onclick="toggleModal('list-modal')">✕ 閉じる</button>
         </div>
-        <div id="q-list" class="q-list"></div>
+        <div id="q-list" class="q-list" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+</div>
+
+<!-- 統計グラフモーダル -->
+<div id="stats-modal" class="modal" onclick="if(event.target === this) toggleModal('stats-modal')">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom:20px;">
+            <h3 style="margin:0;">📊 分野別分析</h3>
+            <button class="btn-sm" onclick="toggleModal('stats-modal')">✕ 閉じる</button>
+        </div>
+        <div id="stats-body"></div>
+        <p style="font-size:0.75em; color:#888; text-align:center; margin-top:20px;">
+            赤線は合格基準目安（分野別30%到達）を示しています。
+        </p>
     </div>
 </div>
 
@@ -70,11 +85,11 @@
     <div class="header">
         <div>
             <button id="prev-btn" class="btn-sm" onclick="prevQ()">◀ 前へ</button>
-            <button class="btn-sm" onclick="toggleModal()">📋 一覧</button>
+            <button class="btn-sm" onclick="toggleModal('list-modal')">📋 一覧</button>
             <button class="btn-sm" onclick="toggleDark()">🌙 モード</button>
         </div>
         <div>
-            <button class="btn-sm" onclick="showStats()">📊 正答率</button>
+            <button class="btn-sm" onclick="updateStatsModal()">📊 正答率</button>
             <button class="btn-sm" onclick="reset()">🔄 リセット</button>
         </div>
     </div>
@@ -92,7 +107,7 @@
     let idx = parseInt(localStorage.getItem('ip_idx')) || 0;
     let scores = JSON.parse(localStorage.getItem('ip_scores')) || { strat: 0, mgmt: 0, tech: 0 };
     let totals = JSON.parse(localStorage.getItem('ip_totals')) || { strat: 0, mgmt: 0, tech: 0 };
-    let answeredQuestions = JSON.parse(localStorage.getItem('ip_answered_list')) || []; // 重複集計防止
+    let answeredQuestions = JSON.parse(localStorage.getItem('ip_answered_list')) || [];
 
     let currentSelection = null;
     let isAnswerShown = false;
@@ -104,32 +119,68 @@
         localStorage.setItem('ip_dark', isDark);
     }
 
-    function toggleModal() {
-        const modal = document.getElementById('list-modal');
+    function toggleModal(id) {
+        const modal = document.getElementById(id);
+        if (id === 'list-modal' && modal.style.display !== 'block') renderList();
+        modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function renderList() {
         const list = document.getElementById('q-list');
-        if (modal.style.display === 'block') {
-            modal.style.display = 'none';
-        } else {
-            list.innerHTML = '';
-            quizData.forEach((q, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'list-btn';
-                const preview = q.問題文.replace(/<br>/g, ' ').substring(0, 25) + '...';
-                let catClass = 'cat-strat';
-                if (q.カテゴリ === "マネジメント系") catClass = 'cat-mgmt';
-                else if (q.カテゴリ === "テクノロジ系") catClass = 'cat-tech';
-                
-                btn.innerHTML = `<div class="list-num">問${q.問番号}</div><div class="list-cat ${catClass}">${q.カテゴリ.replace('系','')}</div><div class="list-snippet">${preview}</div>`;
-                btn.onclick = () => { idx = i; localStorage.setItem('ip_idx', idx); toggleModal(); init(); window.scrollTo(0,0); };
-                list.appendChild(btn);
-            });
-            modal.style.display = 'block';
+        list.innerHTML = '';
+        quizData.forEach((q, i) => {
+            const btn = document.createElement('button');
+            btn.className = 'list-btn';
+            btn.style = "display:flex; align-items:center; padding:12px; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; gap:10px;";
+            const preview = q.問題文.replace(/<br>/g, ' ').substring(0, 25) + '...';
+            let catClass = q.カテゴリ === "マネジメント系" ? 'cat-mgmt' : (q.カテゴリ === "テクノロジ系" ? 'cat-tech' : 'cat-strat');
+            btn.innerHTML = `<div class="list-num">問${q.問番号}</div><div class="list-cat ${catClass}">${q.カテゴリ.replace('系','')}</div><div class="list-snippet">${preview}</div>`;
+            btn.onclick = () => { idx = i; localStorage.setItem('ip_idx', idx); toggleModal('list-modal'); init(); window.scrollTo(0,0); };
+            list.appendChild(btn);
+        });
+    }
+
+    function updateStatsModal() {
+        const body = document.getElementById('stats-body');
+        const criteria = { 
+            strat: { n: "ストラテジ系", l: 30, color: "var(--strat-txt)" }, 
+            mgmt: { n: "マネジメント系", l: 30, color: "var(--mgmt-txt)" }, 
+            tech: { n: "テクノロジ系", l: 30, color: "var(--tech-txt)" } 
+        };
+        
+        body.innerHTML = '';
+        let ac = 0, at = 0;
+        
+        for (let k in criteria) {
+            let s = scores[k], t = totals[k], c = criteria[k];
+            let rate = t === 0 ? 0 : ((s/t)*100).toFixed(1);
+            ac += s; at += t;
+            
+            body.innerHTML += `
+                <div class="stat-item">
+                    <div class="stat-label">
+                        <span>${c.n}</span>
+                        <span>${s}/${t}問 (${rate}%)</span>
+                    </div>
+                    <div class="stat-bar-container">
+                        <div class="target-line" style="left:30%"></div>
+                        <div class="stat-bar-fill" style="width:${rate}%; background:${c.color}"></div>
+                    </div>
+                </div>`;
         }
+        const totalRate = at === 0 ? 0 : ((ac/at)*100).toFixed(1);
+        body.innerHTML += `
+            <div style="margin-top:30px; padding:15px; background:rgba(0,123,255,0.1); border-radius:10px; text-align:center;">
+                <div style="font-weight:bold; margin-bottom:10px;">総合正答率</div>
+                <div style="font-size:2em; font-weight:bold; color:var(--primary);">${totalRate}%</div>
+            </div>`;
+        
+        toggleModal('stats-modal');
     }
 
     function init() {
-        if (typeof quizData === 'undefined') { document.getElementById('question').innerText = "question.js が見つかりません。"; return; }
-        if (idx >= quizData.length) { document.querySelector('.container').innerHTML = `<h2>学習完了です！</h2><button class="btn-action" onclick="reset()">最初からやり直す</button>`; return; }
+        if (typeof quizData === 'undefined') { document.getElementById('question').innerText = "question.jsが見つかりません。"; return; }
+        if (idx >= quizData.length) { document.querySelector('.container').innerHTML = `<h2>学習完了！</h2><button class="btn-action" onclick="reset()">最初から解く</button>`; return; }
         
         isAnswerShown = false; currentSelection = null;
         const q = quizData[idx];
@@ -161,60 +212,36 @@
     }
 
     function handleButtonClick() {
-        if (!isAnswerShown) revealAnswer();
-        else nextQ();
-    }
-
-    function revealAnswer() {
-        const q = quizData[idx];
-        const isCorrect = (currentSelection === q.正解);
-        isAnswerShown = true;
-        
-        // カテゴリ別集計（初回回答のみ）
-        if (!answeredQuestions.includes(q.問番号)) {
-            let catKey = (q.カテゴリ === "マネジメント系") ? 'mgmt' : (q.カテゴリ === "テクノロジ系") ? 'tech' : 'strat';
-            totals[catKey]++;
-            if (isCorrect) scores[catKey]++;
-            answeredQuestions.push(q.問番号);
-            localStorage.setItem('ip_scores', JSON.stringify(scores));
-            localStorage.setItem('ip_totals', JSON.stringify(totals));
-            localStorage.setItem('ip_answered_list', JSON.stringify(answeredQuestions));
-        }
-
-        ['ア','イ','ウ','エ'].forEach(k => {
-            const b = document.getElementById('b'+k);
-            if(b) {
-                b.disabled = true;
-                if(k === q.正解) b.classList.add('correct');
-                else if(k === currentSelection) b.classList.add('wrong');
+        if (!isAnswerShown) {
+            const q = quizData[idx];
+            const isCorrect = (currentSelection === q.正解);
+            isAnswerShown = true;
+            if (!answeredQuestions.includes(q.問番号)) {
+                let catKey = q.カテゴリ === "マネジメント系" ? 'mgmt' : (q.カテゴリ === "テクノロジ系" ? 'tech' : 'strat');
+                totals[catKey]++; if (isCorrect) scores[catKey]++;
+                answeredQuestions.push(q.問番号);
+                localStorage.setItem('ip_scores', JSON.stringify(scores));
+                localStorage.setItem('ip_totals', JSON.stringify(totals));
+                localStorage.setItem('ip_answered_list', JSON.stringify(answeredQuestions));
             }
-        });
-
-        const label = document.getElementById('result-label');
-        label.innerText = isCorrect ? "○ 正解です" : `× 不正解（正解：${q.正解}）`;
-        label.style.color = isCorrect ? "var(--success)" : "var(--danger)";
-        document.getElementById('main-btn').innerText = "次へ進む";
-    }
-
-    function nextQ() { idx++; localStorage.setItem('ip_idx', idx); init(); window.scrollTo(0,0); }
-    function prevQ() { if(idx > 0) { idx--; localStorage.setItem('ip_idx', idx); init(); window.scrollTo(0,0); } }
-
-    function showStats() {
-        const criteria = { strat: { n: "ストラテジ", m: 35, l: 11 }, mgmt: { n: "マネジメント", m: 20, l: 6 }, tech: { n: "テクノロジ", m: 45, l: 14 } };
-        let msg = "【カテゴリ別正答状況】\n\n";
-        let ac = 0, at = 0;
-        for (let k in criteria) {
-            let s = scores[k], t = totals[k], c = criteria[k];
-            let rate = t === 0 ? 0 : ((s/t)*100).toFixed(1);
-            let pass = s >= c.l ? "✅ 基準到達" : "⚠️ 未達 (目安:"+c.l+"問)";
-            msg += `${c.n}: ${s}/${t}問 (${rate}%)\n   ${pass}\n\n`;
-            ac += s; at += t;
+            ['ア','イ','ウ','エ'].forEach(k => {
+                const b = document.getElementById('b'+k);
+                if(b) {
+                    b.disabled = true;
+                    if(k === q.正解) b.classList.add('correct');
+                    else if(k === currentSelection) b.classList.add('wrong');
+                }
+            });
+            const label = document.getElementById('result-label');
+            label.innerText = isCorrect ? "○ 正解です" : `× 不正解（正解：${q.正解}）`;
+            label.style.color = isCorrect ? "var(--success)" : "var(--danger)";
+            document.getElementById('main-btn').innerText = "次へ進む";
+        } else {
+            idx++; localStorage.setItem('ip_idx', idx); init(); window.scrollTo(0,0);
         }
-        const totalRate = at === 0 ? 0 : ((ac/at)*100).toFixed(1);
-        msg += `------------------\n総合正答率: ${totalRate}%\n(合格目安: 各30%以上 ＋ 全体60%以上)`;
-        alert(msg);
     }
 
+    function prevQ() { if(idx > 0) { idx--; localStorage.setItem('ip_idx', idx); init(); window.scrollTo(0,0); } }
     function reset() { if(confirm("進行度とスコアをリセットしますか？")) { localStorage.clear(); location.reload(); } }
     window.onload = init;
 </script>
