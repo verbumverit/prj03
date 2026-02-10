@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ITパスポート試験 公開問題演習（グラフ対応版）</title>
+    <title>ITパスポート試験 100問完走モード</title>
     <script src="question.js"></script>
     <style>
         :root {
@@ -24,28 +24,24 @@
         .header { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 5px; flex-wrap: wrap; }
         .btn-sm { font-size: 0.75em; padding: 6px 12px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 5px; }
 
-        /* モーダル共通 */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 15px; box-sizing: border-box; }
-        .modal-content { background: var(--card); margin: 0 auto; max-width: 550px; padding: 20px; border-radius: 15px; box-shadow: 0 5px 25px rgba(0,0,0,0.4); }
+        .modal-content { background: var(--card); margin: 0 auto; max-width: 550px; padding: 20px; border-radius: 15px; }
 
-        /* カテゴリ別カラーラベル */
         .list-cat { font-size: 0.7em; width: 80px; flex-shrink: 0; padding: 3px 0; border-radius: 4px; text-align: center; font-weight: bold; }
         .cat-strat { background: var(--strat-bg); color: var(--strat-txt); }
         .cat-mgmt { background: var(--mgmt-bg); color: var(--mgmt-txt); }
         .cat-tech { background: var(--tech-bg); color: var(--tech-txt); }
 
-        /* グラフィカル統計用 */
         .stat-item { margin-bottom: 20px; }
         .stat-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
-        .stat-bar-container { height: 12px; background: var(--border); border-radius: 6px; overflow: hidden; position: relative; }
+        .stat-bar-container { height: 14px; background: var(--border); border-radius: 7px; overflow: hidden; position: relative; }
         .stat-bar-fill { height: 100%; transition: width 0.8s ease-out; }
-        .target-line { position: absolute; top: 0; height: 100%; width: 2px; background: red; opacity: 0.5; }
+        .target-line { position: absolute; top: 0; height: 100%; width: 2px; background: #ff5252; opacity: 0.8; z-index: 2; }
 
-        /* メインUI */
         .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 15px; overflow: hidden; }
         #fill { height: 100%; background: var(--primary); width: 0%; transition: 0.4s; }
         .q-text { font-size: 1.1em; font-weight: bold; margin-bottom: 20px; line-height: 1.6; }
-        .choice { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; font-size: 1em; }
+        .choice { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; }
         .selected-choice { border-color: var(--primary); background: var(--selected); }
         .correct { border-color: var(--success) !important; background: rgba(40,167,69,0.1) !important; font-weight: bold; }
         .wrong { border-color: var(--danger) !important; background: rgba(220,53,69,0.1) !important; }
@@ -56,27 +52,27 @@
 </head>
 <body>
 
-<!-- 問題一覧モーダル -->
+<!-- 一覧モーダル -->
 <div id="list-modal" class="modal" onclick="if(event.target === this) toggleModal('list-modal')">
     <div class="modal-content">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
             <h3 style="margin:0;">問題一覧</h3>
             <button class="btn-sm" onclick="toggleModal('list-modal')">✕ 閉じる</button>
         </div>
-        <div id="q-list" class="q-list" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;"></div>
+        <div id="q-list" style="margin-top:15px; display:flex; flex-direction:column; gap:8px;"></div>
     </div>
 </div>
 
-<!-- 統計グラフモーダル -->
+<!-- 統計モーダル -->
 <div id="stats-modal" class="modal" onclick="if(event.target === this) toggleModal('stats-modal')">
     <div class="modal-content">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom:20px;">
-            <h3 style="margin:0;">📊 分野別分析</h3>
+            <h3 style="margin:0;">📊 全100問 到達度分析</h3>
             <button class="btn-sm" onclick="toggleModal('stats-modal')">✕ 閉じる</button>
         </div>
         <div id="stats-body"></div>
         <p style="font-size:0.75em; color:#888; text-align:center; margin-top:20px;">
-            赤線は合格基準目安（分野別30%到達）を示しています。
+            未回答の問題は0点として計算しています。
         </p>
     </div>
 </div>
@@ -105,9 +101,10 @@
 
 <script>
     let idx = parseInt(localStorage.getItem('ip_idx')) || 0;
-    let scores = JSON.parse(localStorage.getItem('ip_scores')) || { strat: 0, mgmt: 0, tech: 0 };
-    let totals = JSON.parse(localStorage.getItem('ip_totals')) || { strat: 0, mgmt: 0, tech: 0 };
-    let answeredQuestions = JSON.parse(localStorage.getItem('ip_answered_list')) || [];
+    // 正解した問題番号を記録する
+    let correctList = JSON.parse(localStorage.getItem('ip_correct_list')) || [];
+    // 回答済みの問題番号を記録する
+    let answeredList = JSON.parse(localStorage.getItem('ip_answered_list')) || [];
 
     let currentSelection = null;
     let isAnswerShown = false;
@@ -132,9 +129,11 @@
             const btn = document.createElement('button');
             btn.className = 'list-btn';
             btn.style = "display:flex; align-items:center; padding:12px; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; gap:10px;";
-            const preview = q.問題文.replace(/<br>/g, ' ').substring(0, 25) + '...';
+            const preview = q.問題文.replace(/<br>/g, ' ').substring(0, 20) + '...';
             let catClass = q.カテゴリ === "マネジメント系" ? 'cat-mgmt' : (q.カテゴリ === "テクノロジ系" ? 'cat-tech' : 'cat-strat');
-            btn.innerHTML = `<div class="list-num">問${q.問番号}</div><div class="list-cat ${catClass}">${q.カテゴリ.replace('系','')}</div><div class="list-snippet">${preview}</div>`;
+            // 回答済みマーク
+            const mark = answeredList.includes(q.問番号) ? (correctList.includes(q.問番号) ? "✅" : "❌") : "　";
+            btn.innerHTML = `<div style="width:20px">${mark}</div><div class="list-num">問${q.問番号}</div><div class="list-cat ${catClass}">${q.カテゴリ.replace('系','')}</div><div class="list-snippet">${preview}</div>`;
             btn.onclick = () => { idx = i; localStorage.setItem('ip_idx', idx); toggleModal('list-modal'); init(); window.scrollTo(0,0); };
             list.appendChild(btn);
         });
@@ -142,37 +141,40 @@
 
     function updateStatsModal() {
         const body = document.getElementById('stats-body');
-        const criteria = { 
-            strat: { n: "ストラテジ系", l: 30, color: "var(--strat-txt)" }, 
-            mgmt: { n: "マネジメント系", l: 30, color: "var(--mgmt-txt)" }, 
-            tech: { n: "テクノロジ系", l: 30, color: "var(--tech-txt)" } 
-        };
+        // 各カテゴリの問番号範囲 [2-4]
+        const categories = [
+            { id: 'strat', name: "ストラテジ系", range: [5, 6], max: 35, color: "var(--strat-txt)" },
+            { id: 'mgmt', name: "マネジメント系", range: [7, 8], max: 20, color: "var(--mgmt-txt)" },
+            { id: 'tech', name: "テクノロジ系", range: [9], max: 45, color: "var(--tech-txt)" }
+        ];
         
         body.innerHTML = '';
-        let ac = 0, at = 0;
+        let totalCorrect = correctList.length;
         
-        for (let k in criteria) {
-            let s = scores[k], t = totals[k], c = criteria[k];
-            let rate = t === 0 ? 0 : ((s/t)*100).toFixed(1);
-            ac += s; at += t;
+        categories.forEach(c => {
+            // カテゴリ範囲内の正解数をカウント
+            let catCorrect = correctList.filter(n => n >= c.range && n <= c.range[5]).length;
+            let rate = ((catCorrect / c.max) * 100).toFixed(1);
             
             body.innerHTML += `
                 <div class="stat-item">
                     <div class="stat-label">
-                        <span>${c.n}</span>
-                        <span>${s}/${t}問 (${rate}%)</span>
+                        <span>${c.name} (全${c.max}問)</span>
+                        <span>${catCorrect}点 / ${rate}%</span>
                     </div>
                     <div class="stat-bar-container">
                         <div class="target-line" style="left:30%"></div>
                         <div class="stat-bar-fill" style="width:${rate}%; background:${c.color}"></div>
                     </div>
                 </div>`;
-        }
-        const totalRate = at === 0 ? 0 : ((ac/at)*100).toFixed(1);
+        });
+
+        const totalRate = ((totalCorrect / 100) * 100).toFixed(1);
         body.innerHTML += `
             <div style="margin-top:30px; padding:15px; background:rgba(0,123,255,0.1); border-radius:10px; text-align:center;">
-                <div style="font-weight:bold; margin-bottom:10px;">総合正答率</div>
-                <div style="font-size:2em; font-weight:bold; color:var(--primary);">${totalRate}%</div>
+                <div style="font-weight:bold; margin-bottom:10px;">現在の総合得点 (100点満点)</div>
+                <div style="font-size:2.5em; font-weight:bold; color:var(--primary);">${totalCorrect}点</div>
+                <div style="font-size:0.9em; opacity:0.8;">総合正答率: ${totalRate}%</div>
             </div>`;
         
         toggleModal('stats-modal');
@@ -180,13 +182,13 @@
 
     function init() {
         if (typeof quizData === 'undefined') { document.getElementById('question').innerText = "question.jsが見つかりません。"; return; }
-        if (idx >= quizData.length) { document.querySelector('.container').innerHTML = `<h2>学習完了！</h2><button class="btn-action" onclick="reset()">最初から解く</button>`; return; }
+        if (idx >= quizData.length) { document.querySelector('.container').innerHTML = `<h2>全問題 終了！</h2><p>お疲れ様でした。正答率ボタンから最終スコアを確認してください。</p><button class="btn-action" onclick="reset()">記録をリセットして最初から</button>`; return; }
         
         isAnswerShown = false; currentSelection = null;
         const q = quizData[idx];
-        document.getElementById('info').innerText = `問 ${q.問番号} / ${quizData.length} [${q.カテゴリ}]`;
+        document.getElementById('info').innerText = `問 ${q.問番号} / 100 [${q.カテゴリ}]`;
         document.getElementById('question').innerHTML = q.問題文;
-        document.getElementById('fill').style.width = `${(idx / quizData.length) * 100}%`;
+        document.getElementById('fill').style.width = `${(idx / 100) * 100}%`;
         document.getElementById('result-label').innerText = "";
         document.getElementById('main-btn').innerText = "回答を判定する";
         document.getElementById('main-btn').disabled = true;
@@ -216,14 +218,15 @@
             const q = quizData[idx];
             const isCorrect = (currentSelection === q.正解);
             isAnswerShown = true;
-            if (!answeredQuestions.includes(q.問番号)) {
-                let catKey = q.カテゴリ === "マネジメント系" ? 'mgmt' : (q.カテゴリ === "テクノロジ系" ? 'tech' : 'strat');
-                totals[catKey]++; if (isCorrect) scores[catKey]++;
-                answeredQuestions.push(q.問番号);
-                localStorage.setItem('ip_scores', JSON.stringify(scores));
-                localStorage.setItem('ip_totals', JSON.stringify(totals));
-                localStorage.setItem('ip_answered_list', JSON.stringify(answeredQuestions));
+            
+            // 回答記録 (重複なし)
+            if (!answeredList.includes(q.問番号)) {
+                answeredList.push(q.問番号);
+                if (isCorrect) correctList.push(q.問番号);
+                localStorage.setItem('ip_answered_list', JSON.stringify(answeredList));
+                localStorage.setItem('ip_correct_list', JSON.stringify(correctList));
             }
+
             ['ア','イ','ウ','エ'].forEach(k => {
                 const b = document.getElementById('b'+k);
                 if(b) {
@@ -233,7 +236,7 @@
                 }
             });
             const label = document.getElementById('result-label');
-            label.innerText = isCorrect ? "○ 正解です" : `× 不正解（正解：${q.正解}）`;
+            label.innerText = isCorrect ? "○ 正解" : `× 不正解（正解：${q.正解}）`;
             label.style.color = isCorrect ? "var(--success)" : "var(--danger)";
             document.getElementById('main-btn').innerText = "次へ進む";
         } else {
