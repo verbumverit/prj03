@@ -73,6 +73,18 @@
     </div>
 </div>
 
+<div id="file-modal" class="modal" onclick="if(event.target === this) toggleModal('file-modal')">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom:20px;">
+            <h3 style="margin:0;">ファイル操作</h3>
+            <button class="btn-sm" onclick="toggleModal('file-modal')">✕ 閉じる</button>
+        </div>
+        <button class="btn-action" style="margin-bottom:15px;" onclick="exportData()">💾 学習データを保存</button>
+        <button class="btn-action" style="background:var(--success);" onclick="document.getElementById('file-input').click()">📂 学習データを読込</button>
+        <input type="file" id="file-input" style="display:none" onchange="importData(this)" accept=".json">
+    </div>
+</div>
+
 <div id="stats-modal" class="modal" onclick="if(event.target === this) toggleModal('stats-modal')">
     <div class="modal-content">
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom:20px;">
@@ -89,9 +101,7 @@
         <div>
             <button id="prev-btn" class="btn-sm" onclick="prevQ()">◀</button>
             <button class="btn-sm" onclick="toggleModal('list-modal')">📋 一覧</button>
-            <button class="btn-sm" onclick="exportData()">💾 保存</button>
-            <button class="btn-sm" onclick="document.getElementById('file-input').click()">📂 読込</button>
-            <input type="file" id="file-input" style="display:none" onchange="importData(this)" accept=".json">
+            <button class="btn-sm" onclick="toggleModal('file-modal')">📁 ファイル</button>
         </div>
         <div>
             <button class="btn-sm" onclick="updateStatsModal()">📊 正答率</button>
