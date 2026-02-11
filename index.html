@@ -2,7 +2,6 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <!-- viewport設定にズーム制限を追加（任意） -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ITパスポート試験 公開問題演習</title>
     <script src="question.js"></script>
@@ -22,40 +21,44 @@
         }
         body { 
             font-family: sans-serif; background: var(--bg); color: var(--text); padding: 15px; 
-            transition: 0.3s; margin: 0; 
-            /* スマホでのダブルタップズームを防止 */
-            touch-action: manipulation; 
+            transition: 0.3s; margin: 0; touch-action: manipulation; 
         }
         .container { max-width: 600px; margin: 0 auto; background: var(--card); padding: 20px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); min-height: 400px; }
         .header { display: flex; justify-content: space-between; margin-bottom: 15px; gap: 5px; flex-wrap: wrap; }
-        .btn-sm { font-size: 0.75em; padding: 6px 10px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 5px; touch-action: manipulation; }
-        .btn-sm:disabled { opacity: 0.2; }
+        .btn-sm { font-size: 0.85em; padding: 8px 12px; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 5px; }
 
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 1000; overflow-y: auto; padding: 15px; box-sizing: border-box; }
         .modal-content { background: var(--card); margin: 0 auto; max-width: 550px; padding: 20px; border-radius: 15px; }
 
-        .list-btn { display: flex; align-items: center; padding: 12px; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 8px; cursor: pointer; gap: 10px; width: 100%; margin-bottom: 8px; text-align: left; touch-action: manipulation; }
-        .list-cat { font-size: 0.7em; width: 80px; flex-shrink: 0; padding: 3px 0; border-radius: 4px; text-align: center; font-weight: bold; }
+        .list-btn { display: flex; align-items: center; padding: 14px; border: 1px solid var(--border); background: var(--card); color: var(--text); border-radius: 8px; cursor: pointer; gap: 10px; width: 100%; margin-bottom: 8px; text-align: left; }
+        .list-num { font-weight: bold; width: 45px; font-size: 1.1em; }
+        .list-cat { font-size: 0.75em; width: 85px; flex-shrink: 0; padding: 4px 0; border-radius: 4px; text-align: center; font-weight: bold; }
+        .list-snippet { font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-grow: 1; opacity: 0.9; }
+
+        /* カテゴリカラー */
         .cat-strat { background: var(--strat-bg); color: var(--strat-txt); }
         .cat-mgmt { background: var(--mgmt-bg); color: var(--mgmt-txt); }
         .cat-tech { background: var(--tech-bg); color: var(--tech-txt); }
 
-        .stat-item { margin-bottom: 20px; }
-        .stat-label { display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold; font-size: 0.9em; }
-        .stat-bar-container { height: 14px; background: var(--border); border-radius: 7px; overflow: hidden; position: relative; }
-        .stat-bar-fill { height: 100%; transition: width 0.8s ease-out; }
-        .target-line { position: absolute; top: 0; height: 100%; width: 2px; background: #ff5252; opacity: 0.8; z-index: 2; }
-
-        .progress-bar { height: 6px; background: var(--border); border-radius: 3px; margin-bottom: 15px; overflow: hidden; }
+        .progress-bar { height: 8px; background: var(--border); border-radius: 4px; margin-bottom: 15px; overflow: hidden; }
         #fill { height: 100%; background: var(--primary); width: 0%; transition: 0.4s; }
-        .q-text { font-size: 1.1em; font-weight: bold; margin-bottom: 20px; line-height: 1.6; }
-        .choice { display: block; width: 100%; padding: 15px; margin: 10px 0; border: 2px solid var(--border); border-radius: 10px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; touch-action: manipulation; }
+        
+        /* 問題文と選択肢のサイズを拡大 */
+        .q-text { font-size: 1.2em; font-weight: bold; margin-bottom: 25px; line-height: 1.6; }
+        .choice { 
+            display: block; width: 100%; padding: 18px; margin: 12px 0; border: 2px solid var(--border); 
+            border-radius: 12px; background: var(--card); color: var(--text); text-align: left; cursor: pointer; 
+            font-size: 1.2em; line-height: 1.4; /* 文字サイズを1.2倍に拡大 */
+        }
+        .choice strong { font-size: 1.3em; margin-right: 5px; color: var(--primary); }
+        
         .selected-choice { border-color: var(--primary); background: var(--selected); }
         .correct { border-color: var(--success) !important; background: rgba(40,167,69,0.1) !important; font-weight: bold; }
         .wrong { border-color: var(--danger) !important; background: rgba(220,53,69,0.1) !important; }
-        #action-area { margin-top: 20px; text-align: center; border-top: 1px solid var(--border); padding-top: 15px; }
-        .btn-action { width: 100%; padding: 16px; background: var(--primary); color: white; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; touch-action: manipulation; }
-        #result-label { font-weight: bold; margin-bottom: 10px; height: 1.5em; font-size: 1.2em; }
+
+        #action-area { margin-top: 25px; text-align: center; border-top: 1px solid var(--border); padding-top: 20px; }
+        .btn-action { width: 100%; padding: 18px; background: var(--primary); color: white; border: none; border-radius: 15px; font-weight: bold; font-size: 1.2em; cursor: pointer; }
+        #result-label { font-weight: bold; margin-bottom: 10px; height: 1.5em; font-size: 1.3em; }
     </style>
 </head>
 <body>
@@ -96,7 +99,7 @@
         </div>
     </div>
     <div class="progress-bar"><div id="fill"></div></div>
-    <div id="info" style="font-size: 0.85em; opacity: 0.7; margin-bottom: 5px;"></div>
+    <div id="info" style="font-size: 0.9em; opacity: 0.7; margin-bottom: 8px;"></div>
     <div id="main-content">
         <div class="q-text" id="question"></div>
         <div id="choices"></div>
@@ -132,7 +135,7 @@
 
     function importData(input) {
         const file = input.files;
-        if (!file) return;
+        if (!file || file.length === 0) return;
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
@@ -161,10 +164,10 @@
         quizData.forEach((q, i) => {
             const btn = document.createElement('button');
             btn.className = 'list-btn';
-            const preview = q.問題文.replace(/<br>/g, ' ').substring(0, 20) + '...';
+            const preview = q.問題文.replace(/<br>/g, ' ').substring(0, 25) + '...';
             let catClass = q.カテゴリ === "マネジメント系" ? 'cat-mgmt' : (q.カテゴリ === "テクノロジ系" ? 'cat-tech' : 'cat-strat');
             const mark = answeredList.includes(q.問番号) ? (correctList.includes(q.問番号) ? "✅" : "❌") : "　";
-            btn.innerHTML = `<div style="width:20px">${mark}</div><div class="list-num">問${q.問番号}</div><div class="list-cat ${catClass}">${q.カテゴリ.replace('系','')}</div><div class="list-snippet">${preview}</div>`;
+            btn.innerHTML = `<div style="width:25px">${mark}</div><div class="list-num">問${q.問番号}</div><div class="list-cat ${catClass}">${q.カテゴリ.replace('系','')}</div><div class="list-snippet">${preview}</div>`;
             btn.onclick = () => { idx = i; localStorage.setItem('ip_idx', idx); toggleModal('list-modal'); init(); window.scrollTo(0,0); };
             list.appendChild(btn);
         });
@@ -181,9 +184,9 @@
         categories.forEach(c => {
             let catCorrect = correctList.filter(n => n >= c.start && n <= c.end).length;
             let rate = ((catCorrect / c.max) * 100).toFixed(1);
-            body.innerHTML += `<div class="stat-item"><div class="stat-label"><span>${c.name}</span><span>${catCorrect}/${c.max}点</span></div><div class="stat-bar-container"><div class="target-line" style="left:30%"></div><div class="stat-bar-fill" style="width:${rate}%; background:${c.color}"></div></div></div>`;
+            body.innerHTML += `<div style="margin-bottom:20px;"><div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.1em; margin-bottom:5px;"><span>${c.name}</span><span>${catCorrect}/${c.max}点</span></div><div style="height:16px; background:var(--border); border-radius:8px; overflow:hidden; position:relative;"><div style="position:absolute; left:30%; top:0; height:100%; width:2px; background:#ff5252; opacity:0.8; z-index:2;"></div><div style="height:100%; width:${rate}%; background:${c.color}; transition:0.8s;"></div></div></div>`;
         });
-        body.innerHTML += `<div style="margin-top:20px; padding:15px; background:rgba(0,123,255,0.1); border-radius:10px; text-align:center;"><div style="font-weight:bold;">総合得点 (100点満点)</div><div style="font-size:2.5em; font-weight:bold; color:var(--primary);">${correctList.length}点</div></div>`;
+        body.innerHTML += `<div style="margin-top:25px; padding:20px; background:rgba(0,123,255,0.1); border-radius:15px; text-align:center;"><div style="font-weight:bold; font-size:1.2em;">総合得点</div><div style="font-size:3em; font-weight:bold; color:var(--primary);">${correctList.length}点 / 100</div></div>`;
         document.getElementById('stats-modal').style.display = 'block';
     }
 
@@ -202,7 +205,7 @@
         if (idx >= quizData.length) {
             info.innerText = "演習 修了";
             document.getElementById('fill').style.width = "100%";
-            question.innerHTML = "<h2>終了しました</h2><p>分析結果を自動表示しています。</p>";
+            question.innerHTML = "<h2>全ての回答が終了しました</h2><p>分析結果を確認して復習に役立てましょう。</p>";
             choices.innerHTML = "";
             mainBtn.innerText = "結果を再表示"; mainBtn.disabled = false; mainBtn.onclick = updateStatsModal;
             updateStatsModal(); return;
@@ -219,7 +222,7 @@
             if(q.選択肢[k]) {
                 const b = document.createElement('button');
                 b.className = 'choice'; b.id = 'b'+k;
-                b.innerHTML = `<strong>${k}</strong>: ${q.選択肢[k]}`;
+                b.innerHTML = `<strong>${k}</strong> ${q.選択肢[k]}`;
                 b.onclick = () => {
                     if (isAnswerShown) return;
                     currentSelection = k;
