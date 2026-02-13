@@ -229,9 +229,15 @@
 
         function resizeClock() {
             const container = document.querySelector('.clock-container');
-            const clockBaseSize = 300; // 時計の基本サイズ(px)
-            // 画面の短辺（幅か高さの小さい方）の85%の大きさになるようにスケール値を計算
-            const scale = (Math.min(window.innerWidth, window.innerHeight) * 0.85) / clockBaseSize;
+            // コンテンツの想定サイズ（アナログ時計300px + デジタル時計 + マージン）
+            // 高さ: 300(時計) + 40(margin) + 80(デジタル) + 余裕 ≈ 460px
+            const contentWidth = 350;
+            const contentHeight = 460;
+
+            // 画面の幅・高さそれぞれに対して、90%に収まるような倍率を計算
+            const scaleWidth = (window.innerWidth * 0.9) / contentWidth;
+            const scaleHeight = (window.innerHeight * 0.9) / contentHeight;
+            const scale = Math.min(scaleWidth, scaleHeight);
             container.style.transform = `scale(${scale})`;
         }
 
