@@ -1,1 +1,94 @@
-hello
+--- /Users/mac/Documents/Git/index.html
++++ /Users/mac/Documents/Git/index.html
+@@ -1 +1,78 @@
+-hello
++<!DOCTYPE html>
++<html lang="ja">
++<head>
++    <meta charset="UTF-8">
++    <meta name="viewport" content="width=device-width, initial-scale=1.0">
++    <title>アナログ時計</title>
++    <style>
++        body {
++            display: flex;
++            justify-content: center;
++            align-items: center;
++            height: 100vh;
++            margin: 0;
++            background-color: #f0f0f0;
++        }
++        .clock {
++            width: 300px;
++            height: 300px;
++            border: 10px solid #333;
++            border-radius: 50%;
++            position: relative;
++            background-color: white;
++            box-shadow: 0 0 20px rgba(0,0,0,0.1);
++        }
++        .hand {
++            position: absolute;
++            bottom: 50%;
++            left: 50%;
++            transform-origin: bottom center;
++            background-color: #333;
++            border-radius: 4px;
++        }
++        .hour {
++            width: 8px;
++            height: 70px;
++            margin-left: -4px;
++        }
++        .minute {
++            width: 6px;
++            height: 100px;
++            margin-left: -3px;
++        }
++        .second {
++            width: 2px;
++            height: 120px;
++            margin-left: -1px;
++            background-color: red;
++        }
++        .center-dot {
++            position: absolute;
++            top: 50%;
++            left: 50%;
++            width: 12px;
++            height: 12px;
++            margin-left: -6px;
++            margin-top: -6px;
++            background-color: #333;
++            border-radius: 50%;
++        }
++    </style>
++</head>
++<body>
++    <div class="clock">
++        <div class="hand hour" id="hour"></div>
++        <div class="hand minute" id="minute"></div>
++        <div class="hand second" id="second"></div>
++        <div class="center-dot"></div>
++    </div>
++
++    <script>
++        function updateClock() {
++            const now = new Date();
++            const seconds = now.getSeconds();
++            const minutes = now.getMinutes();
++            const hours = now.getHours();
++
++            const secondDegrees = ((seconds / 60) * 360);
++            const minuteDegrees = ((minutes / 60) * 360) + ((seconds/60)*6);
++            const hourDegrees = ((hours / 12) * 360) + ((minutes/60)*30);
++
++            document.getElementById('second').style.transform = `rotate(${secondDegrees}deg)`;
++            document.getElementById('minute').style.transform = `rotate(deg)`;
++            document.getElementById('hour').style.transform = `rotate(deg)`;
++        }
++
++        setInterval(updateClock, 1000);
++        updateClock();
++    </script>
++</body>
++</html>
